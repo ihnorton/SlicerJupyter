@@ -109,17 +109,25 @@ std::string xSlicerInterpreter::execute_display_command()
 }
 
 xjson xSlicerInterpreter::complete_request_impl(const std::string& code,
-                                              int cursor_pos)
+                                                int cursor_pos)
 {
     std::cout << "Received complete_request" << std::endl;
     std::cout << "code: " << code << std::endl;
     std::cout << "cursor_pos: " << cursor_pos << std::endl;
     std::cout << std::endl;
-    xjson result;
-    result["status"] = "ok";
-    result["matches"] = {"a.echo1"};
-    result["cursor_start"] = 2;
-    result["cursor_end"] = 6;
+
+    qSlicerPythonManager* pythonManager = qSlicerApplication::application()->pythonManager();
+
+    QString to_eval = QString("__comp = slicer.util.py_complete_request('%1')").arg(QString::fromStdString(code));
+
+    std::cout << "to_eval: " << std::endl << to_eval.toStdString() << std::endl; // debug
+
+    pythonManager->executeString(to_eval);
+    QVariant executeResult = pythonManager->getVariable("__comp");
+
+    std::cout << "result: " << std::endl << executeResult.toString().toStdString() << std::endl; // debug
+
+    xjson result = xjson::parse(executeResult.toString().toStdString());
     return result;
 }
 
